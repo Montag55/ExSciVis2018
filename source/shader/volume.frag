@@ -115,20 +115,28 @@ void main() {
     while (inside_volume){
         // get sample
         float s = get_sample_data(sampling_pos);
+        //vec4 color = texture(transfer_texture, vec2(s, s));
+        vec4 color = vec4(0.5, 0.5, 0.5, 1.0);
 
-        // dummy code
-        dst = vec4(light_diffuse_color, 1.0);
+        if( s - iso_value > 0){
+          dst = color;
+          break;
+        }
 
         // increment the ray sampling position
         sampling_pos += ray_increment;
+
+
 #if TASK == 13 // Binary Search
         IMPLEMENT;
 #endif
+
 #if ENABLE_LIGHTNING == 1 // Add Shading
         IMPLEMENTLIGHT;
-#if ENABLE_SHADOWING == 1 // Add Shadows
-        IMPLEMENTSHADOW;
-#endif
+
+  #if ENABLE_SHADOWING == 1 // Add Shadows
+          IMPLEMENTSHADOW;
+  #endif
 #endif
 
         // update the loop termination condition
