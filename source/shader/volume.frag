@@ -31,24 +31,18 @@ uniform vec3    light_specular_color;
 uniform float   light_ref_coef;
 
 
-bool
-inside_volume_bounds(const in vec3 sampling_position)
-{
+bool inside_volume_bounds(const in vec3 sampling_position) {
     return (   all(greaterThanEqual(sampling_position, vec3(0.0)))
             && all(lessThanEqual(sampling_position, max_bounds)));
 }
 
 
-float
-get_sample_data(vec3 in_sampling_pos)
-{
+float get_sample_data(vec3 in_sampling_pos) {
     vec3 obj_to_tex = vec3(1.0) / max_bounds;
     return texture(volume_texture, in_sampling_pos * obj_to_tex).r;
-
 }
 
-void main()
-{
+void main() {
     /// One step trough the volume
     vec3 ray_increment      = normalize(ray_entry_position - camera_location) * sampling_distance;
     /// Position in Volume
@@ -59,30 +53,29 @@ void main()
 
     /// check if we are inside volume
     bool inside_volume = inside_volume_bounds(sampling_pos);
-    
+
     if (!inside_volume)
         discard;
 
 #if TASK == 10
     vec4 max_val = vec4(0.0, 0.0, 0.0, 0.0);
-    
+
     // the traversal loop,
     // termination when the sampling position is outside volume boundarys
     // another termination condition for early ray termination is added
-    while (inside_volume) 
-    {      
+    while (inside_volume) {
         // get sample
         float s = get_sample_data(sampling_pos);
-                
+
         // apply the transfer functions to retrieve color and opacity
         vec4 color = texture(transfer_texture, vec2(s, s));
-           
+
         // this is the example for maximum intensity projection
         max_val.r = max(color.r, max_val.r);
         max_val.g = max(color.g, max_val.g);
         max_val.b = max(color.b, max_val.b);
         max_val.a = max(color.a, max_val.a);
-        
+
         // increment the ray sampling position
         sampling_pos  += ray_increment;
 
@@ -91,34 +84,35 @@ void main()
     }
 
     dst = max_val;
-#endif 
-    
+#endif
+
 #if TASK == 11
     // the traversal loop,
     // termination when the sampling position is outside volume boundarys
     // another termination condition for early ray termination is added
-    while (inside_volume)
-    {      
+    vec4 col_sum = vec4(0.0, 0.0, 0.0, 0.0);
+    int itor = 0;
+
+    while (inside_volume) {
         // get sample
         float s = get_sample_data(sampling_pos);
-
-        // dummy code
-        dst = vec4(sampling_pos, 1.0);
-        
+        vec4 color = texture(transfer_texture, vec2(s, s));
+        col_sum += color;
         // increment the ray sampling position
         sampling_pos  += ray_increment;
-
         // update the loop termination condition
         inside_volume  = inside_volume_bounds(sampling_pos);
+        itor++;
     }
+
+    dst = col_sum/itor;
 #endif
-    
+
 #if TASK == 12 || TASK == 13
     // the traversal loop,
     // termination when the sampling position is outside volume boundarys
     // another termination condition for early ray termination is added
-    while (inside_volume)
-    {
+    while (inside_volume){
         // get sample
         float s = get_sample_data(sampling_pos);
 
@@ -140,14 +134,13 @@ void main()
         // update the loop termination condition
         inside_volume = inside_volume_bounds(sampling_pos);
     }
-#endif 
+#endif
 
 #if TASK == 31
     // the traversal loop,
     // termination when the sampling position is outside volume boundarys
     // another termination condition for early ray termination is added
-    while (inside_volume)
-    {
+    while (inside_volume) {
         // get sample
 #if ENABLE_OPACITY_CORRECTION == 1 // Opacity Correction
         IMPLEMENT;
@@ -167,9 +160,8 @@ void main()
         // update the loop termination condition
         inside_volume = inside_volume_bounds(sampling_pos);
     }
-#endif 
+#endif
 
     // return the calculated color value
     FragColor = dst;
 }
-
