@@ -23,17 +23,17 @@ Window::Window(glm::ivec2 const& windowsize)
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
   glfwWindowHint(GLFW_RESIZABLE, 0);
-
-#ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+
+#ifdef __APPLE__
 #endif
 
   m_window = glfwCreateWindow(windowsize.x, windowsize.y, m_title.c_str(), nullptr, nullptr);
 
-  
+
   if (m_window) {
     glfwSetWindowUserPointer(m_window, this);
     assert(m_window != nullptr);
@@ -198,5 +198,5 @@ float Window::getTime() const
 
 void Window::resize(glm::ivec2 const& windowsize)
 {
-    glfwSetWindowSize(m_window, windowsize.x, windowsize.y);        
+    glfwSetWindowSize(m_window, windowsize.x, windowsize.y);
 }
