@@ -112,23 +112,51 @@ void main() {
     // the traversal loop,
     // termination when the sampling position is outside volume boundarys
     // another termination condition for early ray termination is added
-    while (inside_volume){
-        // get sample
-        float s = get_sample_data(sampling_pos);
-        //vec4 color = texture(transfer_texture, vec2(s, s));
-        vec4 color = vec4(0.5, 0.5, 0.5, 1.0);
 
+    vec3 old_sampling_pos;
+    while (inside_volume){
+
+      float s = get_sample_data(sampling_pos);
+      old_sampling_pos = sampling_pos;
+
+#if TASK == 12
+        // get sample
+        vec4 color = texture(transfer_texture, vec2(s, s));
+        //vec4 color = vec4(0.5, 0.5, 0.5, 1.0);
         if( s - iso_value > 0){
           dst = color;
           break;
         }
 
+#endif
         // increment the ray sampling position
         sampling_pos += ray_increment;
 
-
 #if TASK == 13 // Binary Search
-        IMPLEMENT;
+        float next_s = get_sample_data(sampling_pos);
+
+        //between s & next_s
+        if(s <= iso_value && iso_value <= next_s){
+
+          int counter = 0;
+          while(counter != 10000){
+
+            vec3 middle = (old_sampling_pos + sampling_pos)/2;
+            float mid_s = get_sample_data(middle);
+
+            if(mid_s == iso_value || counter == 10000 || mid_s - iso_value <= 0.000000001 || mid_s - iso_value >= -0.000000001 ){
+              dst = texture(transfer_texture, vec2(mid_s, mid_s));
+              break;
+            }
+
+            else if (mid_s < iso_value)
+             old_sampling_pos = middle;
+            else
+             sampling_pos = middle;
+
+            counter++;
+        }
+      }
 #endif
 
 #if ENABLE_LIGHTNING == 1 // Add Shading
