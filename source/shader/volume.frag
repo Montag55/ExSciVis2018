@@ -253,7 +253,25 @@ void main() {
       color.w = 1 - pow((1 - color.w), 255 * sampling_distance/sampling_distance_ref);
 #endif
 
+#if ENABLE_LIGHTNING == 0 // Add Shading
       dst.xyz += color.xyz * trans * (color.w);
+#else
+      vec3 light = normalize(light_position - sampling_pos);
+      vec3 normal = -normalize(get_gradient(sampling_pos));
+      vec3 camera = normalize(camera_location - sampling_pos);
+
+      float diffuse = max(dot(light, normal), 0.0);
+      float specular = 0.0;
+
+      if(diffuse > 0.0) {
+        vec3 half_dir    = normalize(light + normal);
+        float spec_angle = max(dot(half_dir, normal), 0.0);
+        specular = pow(spec_angle, light_ref_coef);
+      }
+
+      dst.xyz += (light_ambient_color + diffuse * light_diffuse_color + specular * light_specular_color) * trans * (color.w);;
+#endif
+
       trans *= (1.0 - color.w);
       dst.w = 1.0 - trans;
 
@@ -265,24 +283,6 @@ void main() {
       sampling_pos += ray_increment;
 #else
       sampling_pos -= ray_increment;
-#endif
-
-
-#if ENABLE_LIGHTNING == 1 // Add Shading
-        vec3 light = normalize(light_position - sampling_pos);
-        vec3 normal = -normalize(get_gradient(sampling_pos));
-        vec3 camera = normalize(camera_location - sampling_pos);
-
-        float diffuse = max(dot(light, normal), 0.0);
-        float specular = 0.0;
-
-        if(diffuse > 0.0) {
-          vec3 half_dir    = normalize(light + normal);
-          float spec_angle = max(dot(half_dir, normal), 0.0);
-          specular = pow(spec_angle, light_ref_coef);
-        }
-
-        dst = vec4(light_ambient_color + diffuse * light_diffuse_color + specular * light_specular_color, 1);
 #endif
 
         // update the loop termination condition
